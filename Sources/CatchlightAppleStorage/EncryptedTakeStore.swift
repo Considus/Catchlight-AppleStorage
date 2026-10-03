@@ -1,6 +1,6 @@
 //
 //  EncryptedTakeStore.swift
-//  Catchlight (iOS app target)
+//  CatchlightAppleStorage (shared by the iPhone and Mac apps)
 //
 //  The production `TakeStore`. SQLite3 with PER-ITEM AES-256-GCM SEALED PAYLOADS
 //  (Encryption Architecture §8, revised 2026-06-10) plus iOS Data Protection on
@@ -65,14 +65,15 @@ public final class EncryptedTakeStore: TakeStore {
     /// Open (creating if needed) the database.
     /// - Parameters:
     ///   - keys: the key hierarchy; per-item keys seal every payload column.
-    ///   - directoryURL: where the database directory lives. Defaults to the App
-    ///     Group container (so future extensions can reach it). Tests pass a
-    ///     temp directory so they can never touch live user data.
-    public init(keys: KeyHierarchy, directoryURL: URL? = nil) throws {
+    ///   - directoryURL: where the database directory lives. Each app decides:
+    ///     the iPhone passes its App Group container (so extensions can reach
+    ///     it), the Mac its Application Support folder. Tests pass a temp
+    ///     directory so they can never touch live user data.
+    public init(keys: KeyHierarchy, directoryURL: URL) throws {
         self.keys = keys
         self.crypto = TakeCrypto(keys: keys)
 
-        let baseDir = directoryURL ?? AppGroup.containerURL()
+        let baseDir = directoryURL
         let dbDir = baseDir.appendingPathComponent("Database", isDirectory: true)
         try Self.prepareProtectedDirectory(dbDir)
         self.dbURL = dbDir.appendingPathComponent("catchlight.db")

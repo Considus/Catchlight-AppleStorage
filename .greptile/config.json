@@ -1,0 +1,24 @@
+{
+  "labels": [
+    "greptile"
+  ],
+  "autoReview": [
+    "open"
+  ],
+  "triggerOnDrafts": false,
+  "strictness": 2,
+  "commentTypes": [
+    "logic",
+    "syntax"
+  ],
+  "fileChangeLimit": 60,
+  "excludeAuthors": [
+    "dependabot[bot]",
+    "renovate[bot]"
+  ],
+  "ignorePatterns": ".build/**\n.swiftpm/**\nDerivedData/**",
+  "statusCheck": true,
+  "fixWithAI": true,
+  "includeConfidenceScore": true,
+  "instructions": "CatchlightAppleStorage, the Apple-platform storage both Catchlight apps (iPhone and Mac) use: the encrypted SQLite TakeStore (every Take sealed per item with CatchlightCore's TakeCrypto), the Keychain items for the master key and the Privacy phrase, and the English BIP-39 wordlist. It holds the owner's real daily notes. Treat as breaking: a schema change without a migration, any change to the Keychain service, account, access group or stored key format, a Keychain item that could sync (kSecAttrSynchronizable must be false), a query missing kSecUseDataProtectionKeychain, a delete-then-add that could leave no key on disk, and reintroducing kSecUseAuthenticationUISkip. No network code, no third-party dependencies. Reviews cost a credit from a shared monthly budget, so spend comments on correctness, security and data loss rather than taste. AGENTS.md is the source of truth."
+}

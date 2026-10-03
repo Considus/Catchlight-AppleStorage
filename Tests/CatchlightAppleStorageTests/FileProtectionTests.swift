@@ -15,11 +15,11 @@
 //  the file compiles to nothing and the Core tests run unchanged.
 //
 
-#if canImport(Catchlight)
 import XCTest
 import CryptoKit
-@testable import CatchlightCore
-@testable import Catchlight
+import CatchlightCore
+import CatchlightCoreTestSupport
+@testable import CatchlightAppleStorage
 
 final class FileProtectionTests: XCTestCase {
 
@@ -58,4 +58,3 @@ final class FileProtectionTests: XCTestCase {
         )
     }
 }
-#endif

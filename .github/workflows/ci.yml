@@ -1,0 +1,69 @@
+name: CI
+
+# Two jobs: the package's tests on macOS (`swift test`, the Mac app's platform)
+# and on the iOS simulator (`xcodebuild test`, the iPhone app's), oldest and
+# newest runtimes. The Keychain suite skips in both: the data-protection
+# keychain needs a signed, entitled host, which each app's hosted tests provide.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos-tests:
+    name: AppleStorage on macOS (swift test)
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Cache SwiftPM
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('Package.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: swift test
+        run: swift test
+
+  ios-tests:
+    name: AppleStorage on iOS (xcodebuild test)
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        destination:
+          - 'platform=iOS Simulator,name=iPhone 16,OS=18.5'
+          - 'platform=iOS Simulator,name=iPhone 16,OS=latest'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then
+            echo "::error::No Xcode 26 on this image."
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$XCODE/Contents/Developer" >> "$GITHUB_ENV"
+          echo "Selected $XCODE"
+
+      - name: xcodebuild test
+        run: |
+          xcodebuild test \
+            -scheme CatchlightAppleStorage \
+            -destination '${{ matrix.destination }}'
