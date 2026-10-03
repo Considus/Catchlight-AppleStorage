@@ -14,18 +14,17 @@
 //  iOS test bundle (XcodeGen `CatchlightTests`) executes it.
 //
 
-#if canImport(Catchlight)
 import XCTest
 import CryptoKit
-@testable import CatchlightCore
-@testable import Catchlight
+import CatchlightCore
+@testable import CatchlightAppleStorage
 
 final class EnglishWordlistTests: XCTestCase {
 
     func testBundledWordlistMatchesPinnedSHA256() throws {
-        let bundle = Bundle(for: Self.self)
+        let bundle = EnglishWordlist.resourceBundle
         guard let url = bundle.url(forResource: "bip39-english", withExtension: "txt") else {
-            XCTFail("bip39-english.txt missing from app bundle"); return
+            XCTFail("bip39-english.txt missing from the package bundle"); return
         }
         let data = try Data(contentsOf: url)
         let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
@@ -33,18 +32,18 @@ final class EnglishWordlistTests: XCTestCase {
     }
 
     func testWordlistLoadsAs2048Words() throws {
-        let wl = try EnglishWordlist.load(bundle: Bundle(for: Self.self))
+        let wl = try EnglishWordlist.load(bundle: EnglishWordlist.resourceBundle)
         XCTAssertEqual(wl.words.count, 2048)
     }
 
     func testKnownAnchorWordsPresent() throws {
-        let wl = try EnglishWordlist.load(bundle: Bundle(for: Self.self))
+        let wl = try EnglishWordlist.load(bundle: EnglishWordlist.resourceBundle)
         XCTAssertEqual(wl.words.first, "abandon")
         XCTAssertEqual(wl.words.last, "zoo")
     }
 
     func testGeneratedMnemonicOnlyUsesOfficialWords() throws {
-        let wl = try EnglishWordlist.load(bundle: Bundle(for: Self.self))
+        let wl = try EnglishWordlist.load(bundle: EnglishWordlist.resourceBundle)
         let allowed = Set(wl.words)
         let bip = BIP39(wordlist: wl)
         for _ in 0..<25 {
@@ -63,7 +62,7 @@ final class EnglishWordlistTests: XCTestCase {
     // phrase generated here must recover the same key on any compliant client.
 
     func testOfficialVector_allZeroEntropy_isAbandonTimes11About() throws {
-        let wl = try EnglishWordlist.load(bundle: Bundle(for: Self.self))
+        let wl = try EnglishWordlist.load(bundle: EnglishWordlist.resourceBundle)
         let bip = BIP39(wordlist: wl)
         let entropy = Data(repeating: 0x00, count: 16)
 
@@ -77,7 +76,7 @@ final class EnglishWordlistTests: XCTestCase {
     }
 
     func testOfficialVector_7fEntropy_isLegalWinnerVector() throws {
-        let wl = try EnglishWordlist.load(bundle: Bundle(for: Self.self))
+        let wl = try EnglishWordlist.load(bundle: EnglishWordlist.resourceBundle)
         let bip = BIP39(wordlist: wl)
         let entropy = Data(repeating: 0x7f, count: 16)
 
@@ -90,4 +89,3 @@ final class EnglishWordlistTests: XCTestCase {
                        "round trip must recover the exact entropy")
     }
 }
-#endif

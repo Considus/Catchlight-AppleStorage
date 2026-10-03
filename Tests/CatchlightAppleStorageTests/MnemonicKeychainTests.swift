@@ -13,14 +13,13 @@
 //  surfaces here as well.
 //
 
-#if canImport(Catchlight)
 import XCTest
-@testable import Catchlight
+@testable import CatchlightAppleStorage
 
 final class MnemonicKeychainTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         // TEST SEAM (2026-06-10): redirect to a throwaway service so the suite
         // can NEVER touch (or delete!) the production privacy-phrase slot —
         // deleting the real phrase would be unrecoverable for a real user.
@@ -34,6 +33,16 @@ final class MnemonicKeychainTests: XCTestCase {
         // Start every test from a clean (test-service) slot — a leftover phrase
         // from a previous run would mask an "exists() == false" expectation.
         MnemonicKeychain.delete()
+
+        // The data-protection keychain needs a signed process holding the
+        // keychain-access-groups entitlement. `swift test` runs unsigned and gets
+        // -34018; each app runs this suite in its signed, app-hosted test bundle.
+        do {
+            try MnemonicKeychain.store(["probe"])
+            MnemonicKeychain.delete()
+        } catch KeychainError.storeFailed(let status) where status == errSecMissingEntitlement {
+            throw XCTSkip("Keychain needs a signed, entitled test host (OSStatus -34018); runs in each app's hosted tests.")
+        }
     }
 
     override func tearDown() {
@@ -100,4 +109,3 @@ final class MnemonicKeychainTests: XCTestCase {
         XCTAssertNil(MnemonicKeychain.retrieve())
     }
 }
-#endif

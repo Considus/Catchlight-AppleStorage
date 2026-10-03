@@ -1,6 +1,6 @@
 //
 //  MnemonicKeychain.swift
-//  Catchlight (iOS app target) — Task 3.12
+//  CatchlightAppleStorage (shared by the iPhone and Mac apps) — Task 3.12
 //
 //  Persistent storage for the 12-word BIP-39 privacy phrase, so Settings →
 //  Privacy phrase can re-display it after onboarding. Stored as the canonical
@@ -82,6 +82,7 @@ public enum MnemonicKeychain {
         // surface as errSecInteractionNotAllowed, handled below.
         let searchQuery: [String: Any] = [
             kSecClass as String:               kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:         configuration.service,
             kSecAttrAccount as String:         configuration.account,
             kSecAttrAccessGroup as String:     configuration.accessGroup,
@@ -113,6 +114,7 @@ public enum MnemonicKeychain {
     private static func add(_ data: Data, accessControl: SecAccessControl?) throws {
         var query: [String: Any] = [
             kSecClass as String:              kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:        configuration.service,
             kSecAttrAccount as String:        configuration.account,
             kSecAttrAccessGroup as String:    configuration.accessGroup,
@@ -134,6 +136,7 @@ public enum MnemonicKeychain {
     public static func retrieve(reason: String = "Reveal your Privacy phrase") -> [String]? {
         var query: [String: Any] = [
             kSecClass as String:              kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:        configuration.service,
             kSecAttrAccount as String:        configuration.account,
             kSecAttrAccessGroup as String:    configuration.accessGroup,
@@ -161,6 +164,7 @@ public enum MnemonicKeychain {
     public static func exists() -> Bool {
         var query: [String: Any] = [
             kSecClass as String:              kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:        configuration.service,
             kSecAttrAccount as String:        configuration.account,
             kSecAttrAccessGroup as String:    configuration.accessGroup,
@@ -205,6 +209,7 @@ public enum MnemonicKeychain {
     public static func delete() {
         let query: [String: Any] = [
             kSecClass as String:           kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:     configuration.service,
             kSecAttrAccount as String:     configuration.account,
             kSecAttrAccessGroup as String: configuration.accessGroup

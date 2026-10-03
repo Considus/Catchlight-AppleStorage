@@ -1,6 +1,6 @@
 //
 //  BIP39Wordlist+English.swift
-//  Catchlight (iOS app target)
+//  CatchlightAppleStorage (shared by the iPhone and Mac apps)
 //
 //  Loads the official BIP-39 English wordlist (2048 words) from a bundled resource
 //  and verifies it by SHA-256 before use. The wordlist is a STANDARD DATA ARTIFACT,
@@ -31,7 +31,10 @@ public enum EnglishWordlist {
     /// Source: https://raw.githubusercontent.com/trezor/python-mnemonic/master/src/mnemonic/wordlist/english.txt
     public static let expectedSHA256 = "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda"
 
-    public static func load(bundle: Bundle = .main) throws -> BIP39Wordlist {
+    /// The package's own resource bundle, which carries `bip39-english.txt`.
+    public static let resourceBundle: Bundle = .module
+
+    public static func load(bundle: Bundle = resourceBundle) throws -> BIP39Wordlist {
         guard let url = bundle.url(forResource: "bip39-english", withExtension: "txt") else {
             throw LoadError.resourceMissing
         }

@@ -1,6 +1,6 @@
 //
 //  Keychain.swift
-//  Catchlight (iOS app target)
+//  CatchlightAppleStorage (shared by the iPhone and Mac apps)
 //
 //  Master-key storage in the iOS Keychain, hardware-bound via the Secure Enclave
 //  (Encryption Architecture §9, Phase 5 brief §5.7). This file requires the iOS SDK
@@ -23,6 +23,12 @@
 //
 //  The stored payload carries a 1-byte format prefix so the two shapes can never
 //  be confused: 0x01 = raw (simulator), 0x02 = SE-wrapped ECIES ciphertext.
+//
+//  macOS: every query carries `kSecUseDataProtectionKeychain: true`. Without it a
+//  Mac query goes to the legacy file-based keychain, which ignores access groups
+//  and access control, so the item would sit in the login keychain with no
+//  user-presence check. iOS has only the data-protection keychain and ignores the
+//  attribute. Same team, so the same access group string works on both.
 //
 //  NON-NEGOTIABLE INVARIANTS:
 //    • kSecAttrAccessibleWhenUnlockedThisDeviceOnly — key never migrates off-device
@@ -130,6 +136,7 @@ public struct MasterKeyKeychain {
         context.localizedReason = reason
         var query: [String: Any] = [
             kSecClass as String:              kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:        service,
             kSecAttrAccount as String:        account,
             kSecAttrAccessGroup as String:    accessGroup,
@@ -177,6 +184,7 @@ public struct MasterKeyKeychain {
     public static func exists() -> Bool {
         let query: [String: Any] = [
             kSecClass as String:           kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:     service,
             kSecAttrAccount as String:     account,
             kSecAttrAccessGroup as String: accessGroup,
@@ -214,6 +222,7 @@ public struct MasterKeyKeychain {
         // The wrapped blob…
         let query: [String: Any] = [
             kSecClass as String:           kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:     service,
             kSecAttrAccount as String:     account,
             kSecAttrAccessGroup as String: accessGroup
@@ -222,6 +231,7 @@ public struct MasterKeyKeychain {
         // …and the Secure Enclave wrapping key (no-op if none exists).
         let keyQuery: [String: Any] = [
             kSecClass as String:              kSecClassKey,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrApplicationTag as String: seKeyTag,
             kSecAttrKeyType as String:        kSecAttrKeyTypeECSECPrimeRandom
         ]
@@ -283,6 +293,7 @@ public struct MasterKeyKeychain {
     private static func fetchSEKey(context: LAContext?) throws -> SecKey {
         var query: [String: Any] = [
             kSecClass as String:              kSecClassKey,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrApplicationTag as String: seKeyTag,
             kSecAttrKeyType as String:        kSecAttrKeyTypeECSECPrimeRandom,
             kSecAttrAccessGroup as String:    accessGroup,
@@ -307,6 +318,7 @@ public struct MasterKeyKeychain {
     private static func upsertItem(_ data: Data, accessControl: SecAccessControl?) throws {
         let searchQuery: [String: Any] = [
             kSecClass as String:              kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:        service,
             kSecAttrAccount as String:        account,
             kSecAttrAccessGroup as String:    accessGroup,
@@ -346,6 +358,7 @@ public struct MasterKeyKeychain {
         }
         let deleteQuery: [String: Any] = [
             kSecClass as String:           kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:     service,
             kSecAttrAccount as String:     account,
             kSecAttrAccessGroup as String: accessGroup
@@ -357,6 +370,7 @@ public struct MasterKeyKeychain {
     private static func addItem(_ data: Data, accessControl: SecAccessControl?) throws {
         var query: [String: Any] = [
             kSecClass as String:              kSecClassGenericPassword,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrService as String:        service,
             kSecAttrAccount as String:        account,
             kSecAttrAccessGroup as String:    accessGroup,

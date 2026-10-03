@@ -23,10 +23,10 @@
 //  skips both suites cleanly.
 //
 
-#if canImport(Catchlight)
 import XCTest
-@testable import Catchlight
-@testable import CatchlightCore
+@testable import CatchlightAppleStorage
+import CatchlightCore
+import CatchlightCoreTestSupport
 import CryptoKit
 
 // MARK: - Shared contract against the production store
@@ -195,4 +195,3 @@ final class EncryptedTakeStoreTests: XCTestCase {
         XCTAssertTrue(checkedAnyFile, "expected at least the main DB file at \(dbURL.path)")
     }
 }
-#endif

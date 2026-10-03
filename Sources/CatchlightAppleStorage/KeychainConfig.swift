@@ -1,6 +1,6 @@
 //
 //  KeychainConfig.swift
-//  Catchlight (iOS app target)
+//  CatchlightAppleStorage (shared by the iPhone and Mac apps)
 //
 //  Single source of truth for the Keychain access group shared by
 //  MasterKeyKeychain, MnemonicKeychain, and any future extension.
