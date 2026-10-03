@@ -272,6 +272,8 @@ public struct MasterKeyKeychain {
         ) else { throw KeychainError.accessControlCreationFailed }
 
         let attributes: [String: Any] = [
+            // Created where fetchSEKey and delete look for it (macOS; iOS ignores it).
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrKeyType as String:       kSecAttrKeyTypeECSECPrimeRandom,
             kSecAttrKeySizeInBits as String: 256,
             kSecAttrTokenID as String:       kSecAttrTokenIDSecureEnclave,
