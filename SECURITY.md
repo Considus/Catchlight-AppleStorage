@@ -14,6 +14,8 @@ I'll acknowledge it within **3 business days** and keep you posted while it's be
 
 Everything in this package, which means the database and what it leaves readable, file protection and backup exclusion, the Keychain items for the master key and the Privacy phrase, and the wordlist. The encryption design itself lives in [Catchlight-Core](https://github.com/Considus/Catchlight-Core) and is reported the same way.
 
+Report a problem with the catchlight.app website to the same address. The policy that covers the site, alongside every Catchlight app and package, is at [catchlight.app/security](https://catchlight.app/security/).
+
 Generally out of scope, anything that needs a jailbroken or otherwise compromised device, or physical access to a device that's already unlocked. Social engineering and denial of service are out too, along with findings in Apple's own platforms, because those aren't mine to fix.
 
 ## Safe harbour
