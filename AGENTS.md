@@ -11,6 +11,7 @@ Every task moves through four beats: isolate on a branch, build, prove with evid
 - `EncryptedTakeStore`: the production `TakeStore`. SQLite (the system `SQLite3` module) with every Take and Sequence sealed per item by CatchlightCore's `TakeCrypto`. Schema v2, `PRAGMA user_version = 2`.
 - `MasterKeyKeychain` and `MnemonicKeychain`: the master key and the Privacy phrase in the Keychain.
 - `EnglishWordlist`: the BIP-39 English list, bundled and checked by SHA-256 before use.
+- `FileCloudFolder`: Core's `CloudFolder` over the file system, for the sync folder the user picks. A security-scoped bookmark keeps access across launches; on macOS it is made and resolved with `.withSecurityScope`, which iOS does not have. Moved from Catchlight-iOS on 2026-10-05; the iPhone keeps its own copy until it moves onto this package.
 
 It moved here from `Considus/Catchlight-iOS` on 2026-10-03 with its history, so the iPhone and the Mac share one copy instead of two that drift. CatchlightCore stays free of storage and Keychain code; this package is where the Apple-only parts live.
 

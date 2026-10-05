@@ -1,0 +1,216 @@
+//
+//  FileCloudFolder.swift
+//  CatchlightAppleStorage
+//
+//  The production `CloudFolder` over the file system, for the iPhone and the Mac. The
+//  user picks a folder once (the iPhone's document picker, the Mac's `NSOpenPanel`); the
+//  app persists a security-scoped bookmark and re-resolves it for ongoing `FileManager`
+//  access. Cloud-AGNOSTIC: any provider that exposes a folder works (iCloud Drive is the
+//  primary case; see Cloud_Provider_Sync_Compatibility.md).
+//
+//  Conforms to `CatchlightCore.CloudFolder`, so the cloud-agnostic SyncEngine drives it
+//  unchanged. File coordination (`NSFileCoordinator`) is used so reads and writes
+//  cooperate with the provider's background up/download.
+//
+//  Moved here from Catchlight-iOS (`Catchlight/Sync/FileCloudFolder.swift`, last changed
+//  in 031947f) so both apps share one copy. The one platform difference: a Mac bookmark
+//  must be made and resolved with `.withSecurityScope`, an option iOS does not have
+//  (its document-picker bookmarks are implicitly security-scoped).
+//
+
+import Foundation
+import CatchlightCore
+
+public final class FileCloudFolder: CloudFolder {
+
+    /// The resolved folder URL. Exposed so callers can re-mint a bookmark when
+    /// `bookmarkWasStale` is true.
+    public let folderURL: URL
+    /// True when the bookmark resolved but the OS flagged it stale — the caller
+    /// should re-mint and re-persist a fresh bookmark from `folderURL`
+    /// (previously the flag was silently discarded, so access could fail later
+    /// with opaque permission errors).
+    public let bookmarkWasStale: Bool
+    private let coordinator = NSFileCoordinator()
+    private let didStartScopedAccess: Bool
+
+    public enum AccessError: Error {
+        /// `startAccessingSecurityScopedResource()` returned false — the sandbox
+        /// will deny every subsequent operation, so fail loudly at construction
+        /// instead of surfacing N opaque per-file errors later.
+        case securityScopeDenied(URL)
+    }
+
+    /// Resolve a previously stored security-scoped bookmark to the chosen folder.
+    public init(bookmark: Data) throws {
+        var stale = false
+        let url = try URL(
+            resolvingBookmarkData: bookmark,
+            options: Self.resolveOptions,
+            relativeTo: nil,
+            bookmarkDataIsStale: &stale
+        )
+        self.folderURL = url
+        self.bookmarkWasStale = stale
+        guard url.startAccessingSecurityScopedResource() else {
+            throw AccessError.securityScopeDenied(url)
+        }
+        self.didStartScopedAccess = true
+    }
+
+    /// Direct-URL initialiser (e.g. an app-owned iCloud container). No scoped
+    /// access is started, so none is stopped on deinit (an unbalanced
+    /// `stopAccessingSecurityScopedResource` is a documented programming error).
+    public init(folderURL: URL) {
+        self.folderURL = folderURL
+        self.bookmarkWasStale = false
+        self.didStartScopedAccess = false
+    }
+
+    deinit {
+        if didStartScopedAccess {
+            folderURL.stopAccessingSecurityScopedResource()
+        }
+    }
+
+    /// Persist a bookmark for the picked folder so access survives relaunches.
+    /// (On iOS, document-picker bookmarks are implicitly security-scoped;
+    /// `.withSecurityScope` is a macOS-only option, and a sandboxed Mac app cannot
+    /// reach the folder on the next launch without it.)
+    public static func makeBookmark(for pickedURL: URL) throws -> Data {
+        // Balance start/stop: an unbalanced stop (when start returned false)
+        // is a documented programming error.
+        let started = pickedURL.startAccessingSecurityScopedResource()
+        defer { if started { pickedURL.stopAccessingSecurityScopedResource() } }
+        return try pickedURL.bookmarkData(options: makeOptions, includingResourceValuesForKeys: nil, relativeTo: nil)
+    }
+
+    #if os(macOS)
+    static let makeOptions: URL.BookmarkCreationOptions = [.withSecurityScope]
+    static let resolveOptions: URL.BookmarkResolutionOptions = [.withoutUI, .withSecurityScope]
+    #else
+    static let makeOptions: URL.BookmarkCreationOptions = []
+    static let resolveOptions: URL.BookmarkResolutionOptions = [.withoutUI]
+    #endif
+
+    /// Ensure a subfolder exists inside the cloud folder — used to auto-create the
+    /// user-facing `Import/` drop folder on sync so it's there from the start, on new
+    /// AND existing setups (owner 2026-06-22). Idempotent and best-effort: a provider
+    /// hiccup must never fail a sync pass. Security scope is already held by `self`.
+    public func ensureSubfolder(_ name: String) {
+        let dir = folderURL.appendingPathComponent(name, isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    }
+
+    public func listFiles() throws -> [String] {
+        var result: [String] = []
+        var coordError: NSError?
+        coordinator.coordinate(readingItemAt: folderURL, options: [], error: &coordError) { url in
+            let items = (try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)) ?? []
+            result = items.map { $0.lastPathComponent }
+        }
+        if let coordError { throw coordError }
+        return result
+    }
+
+    public func read(_ name: String) throws -> Data? {
+        let fileURL = folderURL.appendingPathComponent(name)
+
+        // Evicted iCloud files exist only as `.name.icloud` placeholders. The
+        // previous implementation pre-checked `fileExists` on the real name and
+        // returned nil — so a perfectly healthy, merely-evicted blob read as
+        // permanently missing (which the old sync engine then propagated as a
+        // DELETION). Ask the provider to materialise it; the coordinated read
+        // below blocks until the content is available.
+        if let isUbiquitous = try? fileURL.resourceValues(forKeys: [.isUbiquitousItemKey]).isUbiquitousItem,
+           isUbiquitous {
+            try? FileManager.default.startDownloadingUbiquitousItem(at: fileURL)
+        }
+
+        var data: Data?
+        var readError: Error?
+        var coordError: NSError?
+        coordinator.coordinate(readingItemAt: fileURL, options: [], error: &coordError) { url in
+            do {
+                data = try Data(contentsOf: url)
+            } catch {
+                readError = error
+            }
+        }
+        if let coordError {
+            if Self.isFileNotFound(coordError) { return nil }
+            throw coordError
+        }
+        if let readError {
+            // "No such file" is a legitimate nil; every OTHER I/O error must
+            // surface (the old `try?` collapsed real failures into "missing").
+            if Self.isFileNotFound(readError as NSError) { return nil }
+            throw readError
+        }
+        return data
+    }
+
+    private static func isFileNotFound(_ error: NSError) -> Bool {
+        if error.domain == NSCocoaErrorDomain,
+           error.code == NSFileReadNoSuchFileError || error.code == NSFileNoSuchFileError {
+            return true
+        }
+        if error.domain == NSPOSIXErrorDomain, error.code == Int(ENOENT) { return true }
+        // Unwrap one level of underlying error (NSFileCoordinator wraps).
+        if let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+            return isFileNotFound(underlying)
+        }
+        return false
+    }
+
+    public func write(_ data: Data, to name: String) throws {
+        let fileURL = folderURL.appendingPathComponent(name)
+        var coordError: NSError?
+        var writeError: Error?
+        coordinator.coordinate(writingItemAt: fileURL, options: [.forReplacing], error: &coordError) { url in
+            do { try data.write(to: url, options: .atomic) } catch { writeError = error }
+        }
+        if let coordError { throw coordError }
+        if let writeError { throw writeError }
+    }
+
+    public func writeAtomically(_ data: Data, to name: String) throws {
+        // `Data.write(.atomic)` already performs temp-write + rename; this satisfies
+        // the "no partial manifest on crash" requirement (Phase 5 brief §7.4 step 5).
+        try write(data, to: name)
+    }
+
+    public func delete(_ name: String) throws {
+        // No `fileExists` pre-check (2026-06-10): an EVICTED iCloud file exists
+        // only as a `.name.icloud` placeholder, for which the pre-check returned
+        // false and silently skipped the delete — orphaning user-deleted blobs
+        // in the cloud forever. The coordinated `.forDeleting` write handles
+        // placeholders; not-found is a legitimate no-op.
+        let fileURL = folderURL.appendingPathComponent(name)
+        var coordError: NSError?
+        var rmError: Error?
+        coordinator.coordinate(writingItemAt: fileURL, options: [.forDeleting], error: &coordError) { url in
+            do { try FileManager.default.removeItem(at: url) } catch { rmError = error }
+        }
+        if let coordError {
+            if Self.isFileNotFound(coordError) { return }
+            throw coordError
+        }
+        if let rmError {
+            if Self.isFileNotFound(rmError as NSError) { return }
+            throw rmError
+        }
+    }
+
+    public func secureDelete(_ name: String) throws {
+        // Overwrite with equal-length random bytes, then delete (Encryption
+        // Architecture §6 step 13). NOTE (accepted residual risk, threat model):
+        // cloud providers may retain prior versions in version history — the
+        // ephemeral ECDH binding is what actually protects the handshake files, so
+        // overwrite-then-delete is defence in depth, not the primary control.
+        if let existing = try read(name) {
+            try write(SecureRandom.bytes(existing.count), to: name)
+        }
+        try delete(name)
+    }
+}

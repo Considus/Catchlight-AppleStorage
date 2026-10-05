@@ -12,6 +12,8 @@ The key. Your master key goes in the Keychain, never syncs to iCloud, and never 
 
 The wordlist. The 2048 English words a Privacy phrase is made from, the standard BIP-39 list, checked against a pinned SHA-256 every time it loads, because a single wrong word would make phrases that no other BIP-39 tool can read back.
 
+The sync folder. The code that reads and writes the folder you pick for sync, iCloud Drive or anything else that shows up as a folder. It only ever moves sealed Takes and the signed index of them, and it can't open either. The app keeps a bookmark so it can find the folder again after a relaunch, and the system hands that bookmark back to Catchlight and nothing else.
+
 Nothing in here talks to a network. Core stays free of storage and Keychain code, which is why it can build for other platforms, and this package is where the Apple-only parts went.
 
 ## Building it
