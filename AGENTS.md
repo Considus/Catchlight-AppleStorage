@@ -58,4 +58,4 @@ CI runs the suite on macOS (`swift test`) and on the iOS simulator (`xcodebuild 
 
 ## Ship
 
-Run `/code-review` locally before opening the PR. Every PR gets one automatic Claude review (`.github/workflows/claude-review.yml`); after a push, close and reopen the PR so the review covers the new head. A release is a tag (`X.Y.Z`) on `main` after the PR merges; each app then takes it through its own pin bump.
+Run `/code-review` locally before opening the PR. Every PR gets one automatic Claude review (`.github/workflows/claude-review.yml`); after a push, add the `re-review` label so the review covers the new head (remove it first if it is on). Closing and reopening also works but re-runs Greptile, which spends a credit. A release is a tag (`X.Y.Z`) on `main` after the PR merges; each app then takes it through its own pin bump.
