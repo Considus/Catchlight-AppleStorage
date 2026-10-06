@@ -21,7 +21,7 @@ let package = Package(
         .library(name: "CatchlightAppleStorage", targets: ["CatchlightAppleStorage"])
     ],
     dependencies: [
-        .package(url: "https://github.com/Considus/Catchlight-Core", .upToNextMinor(from: "1.1.0"))
+        .package(url: "https://github.com/Considus/Catchlight-Core", .upToNextMinor(from: "1.2.0"))
     ],
     targets: [
         .target(
