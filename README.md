@@ -33,7 +33,7 @@ Add it as a Swift package and pin an exact version:
 .package(url: "https://github.com/Considus/Catchlight-AppleStorage", exact: "1.0.0")
 ```
 
-It takes Core within a minor version, so the exact Core version your app pins is the one it builds against. Tell the store where its folder lives, an App Group container on the iPhone, Application Support on the Mac, and it never goes looking for one itself.
+It takes any Core 1.x from 1.2.0, so the exact Core version your app pins is the one it builds against. Tell the store where its folder lives, an App Group container on the iPhone, Application Support on the Mac, and it never goes looking for one itself.
 
 ## Licence
 
