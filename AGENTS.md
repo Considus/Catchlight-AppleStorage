@@ -15,7 +15,7 @@ Every task moves through four beats: isolate on a branch, build, prove with evid
 
 It moved here from `Considus/Catchlight-iOS` on 2026-10-03 with its history, so the iPhone and the Mac share one copy instead of two that drift. CatchlightCore stays free of storage and Keychain code; this package is where the Apple-only parts live.
 
-Consumers pin an exact version in their `project.yml`. This package takes Core as `upToNextMinor`, so the app's exact Core pin decides which Core it builds against. A Core minor bump needs a release here first.
+Consumers pin an exact version in their `project.yml`. This package takes Core as `upToNextMajor` from 1.2.0, so the app's exact Core pin decides which Core it builds against, and a Core minor release needs no release here (2026-10-07: each Core minor had been blocking the Mac behind an AppleStorage release). A Core 2.0 would need one. Its tests run against the newest Core 1.x, so a Core change that breaks this package shows up here as well as in the apps.
 
 ## Isolate
 
