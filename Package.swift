@@ -6,7 +6,7 @@
 // and Mac apps so their databases and Keychain handling cannot drift.
 //
 // CatchlightCore stays free of storage and Keychain code; this package is where
-// the Apple-only parts live. It takes any Core 1.x from 1.2.0, so each app's exact
+// the Apple-only parts live. It takes any Core 1.x from 1.7.0 (it calls Take.markModified), so each app's exact
 // Core pin decides which Core it builds against, and a Core release needs no release here.
 //
 import PackageDescription
@@ -21,7 +21,7 @@ let package = Package(
         .library(name: "CatchlightAppleStorage", targets: ["CatchlightAppleStorage"])
     ],
     dependencies: [
-        .package(url: "https://github.com/Considus/Catchlight-Core", .upToNextMajor(from: "1.2.0"))
+        .package(url: "https://github.com/Considus/Catchlight-Core", .upToNextMajor(from: "1.7.0"))
     ],
     targets: [
         .target(
