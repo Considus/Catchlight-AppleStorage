@@ -6,7 +6,7 @@ For a coding agent working in this repo. People start with [`README.md`](README.
 
 This code holds people's notes and the only key to them. Each rule below comes from a measured failure on a real device; the comment at each site says which.
 
-- **Treat the database schema (`PRAGMA user_version`), the Keychain service, accounts and access group (`KeychainConfig.swift`, `Keychain.swift`) and the stored key format (the `0x01` / `0x02` prefix) as on-device contracts.** Changing one needs a migration both apps agree before it ships.
+- **Treat the database schema (`PRAGMA user_version`), the Keychain service (`com.considus.catchlight`), the accounts (`master-key`, `privacy-phrase`), the access group and the stored key format (the `0x01` / `0x02` prefix) as on-device contracts.** Changing one needs a migration both apps agree before it ships.
 - **Make every Keychain item `kSecAttrSynchronizable: false` and `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`.**
 - **Put `kSecUseDataProtectionKeychain: true` on every Keychain query.** Without it a Mac query goes to the legacy file keychain, which ignores access groups and access control. iOS ignores the attribute.
 - **Write Keychain items update-then-add.** Delete-then-add only on `errSecInteractionNotAllowed`, because a kill between the two leaves no key on disk.
