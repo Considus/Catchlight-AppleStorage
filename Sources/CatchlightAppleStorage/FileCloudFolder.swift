@@ -6,14 +6,13 @@
 //  user picks a folder once (the iPhone's document picker, the Mac's `NSOpenPanel`); the
 //  app persists a security-scoped bookmark and re-resolves it for ongoing `FileManager`
 //  access. Cloud-AGNOSTIC: any provider that exposes a folder works (iCloud Drive is the
-//  primary case; see Cloud_Provider_Sync_Compatibility.md).
+//  primary case).
 //
 //  Conforms to `CatchlightCore.CloudFolder`, so the cloud-agnostic SyncEngine drives it
 //  unchanged. File coordination (`NSFileCoordinator`) is used so reads and writes
 //  cooperate with the provider's background up/download.
 //
-//  Moved here from Catchlight-iOS (`Catchlight/Sync/FileCloudFolder.swift`, last changed
-//  in 031947f) so both apps share one copy. The one platform difference: a Mac bookmark
+//  The iOS and Mac apps share this one copy. The one platform difference: a Mac bookmark
 //  must be made and resolved with `.withSecurityScope`, an option iOS does not have
 //  (its document-picker bookmarks are implicitly security-scoped).
 //
