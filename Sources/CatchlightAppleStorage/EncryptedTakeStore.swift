@@ -466,7 +466,7 @@ public final class EncryptedTakeStore: TakeStore {
     public func release(id: UUID, ifNotModifiedAfter cutoff: Date) throws -> Bool {
         try queue.sync {
             // Read and delete inside one queue.sync and one transaction, and no tombstone
-            // row: see the protocol for why both matter.
+            // row: see `TakeStore.release(id:ifNotModifiedAfter:)` for why both matter.
             try exec("BEGIN IMMEDIATE;")
             var committed = false
             defer { if !committed { try? exec("ROLLBACK;") } }

@@ -12,8 +12,7 @@
 //  unchanged. File coordination (`NSFileCoordinator`) is used so reads and writes
 //  cooperate with the provider's background up/download.
 //
-//  Moved here from Catchlight-iOS (`Catchlight/Sync/FileCloudFolder.swift`, last changed
-//  in 031947f) so both apps share one copy. The one platform difference: a Mac bookmark
+//  The iOS and Mac apps share this one copy. The one platform difference: a Mac bookmark
 //  must be made and resolved with `.withSecurityScope`, an option iOS does not have
 //  (its document-picker bookmarks are implicitly security-scoped).
 //
