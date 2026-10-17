@@ -31,7 +31,7 @@ CI (`.github/workflows/ci.yml`) runs the suite on macOS and on the iOS simulator
 
 ## Ship
 
-1. Switch on the committed hooks once per clone: `git config core.hooksPath hooks`. `hooks/pre-commit` refuses a commit on `main`; `hooks/commit-msg` refuses a Claude attribution footer.
+1. Switch on the committed hooks once per clone: `git config core.hooksPath hooks`. `hooks/pre-commit` refuses a commit on `main`; `hooks/commit-msg` refuses a Claude attribution footer or an em or en dash.
 2. Check nobody is already on the work, then branch from `origin/main` by name:
 
    ```bash
