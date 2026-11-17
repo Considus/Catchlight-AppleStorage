@@ -218,6 +218,47 @@ final class EncryptedTakeStoreTests: XCTestCase {
         XCTAssertEqual(try timeline.tombstones().map(\.id), [original.id], "the tombstone was erased")
     }
 
+    func testUpsertIfAbsent_writesWhenAbsent_andRefusesWhenPresent() throws {
+        let take = Take(blocks: [.textLine("first")])
+        XCTAssertTrue(try store.upsertIfAbsent(take))
+        XCTAssertEqual(try store.take(id: take.id)?.blocks, take.blocks)
+
+        var other = take
+        other.blocks = [.textLine("second")]
+        XCTAssertFalse(try store.upsertIfAbsent(other))
+        XCTAssertEqual(try store.take(id: take.id)?.blocks, take.blocks, "a present Take was replaced")
+    }
+
+    /// A Take arriving on a second connection while `upsertIfAbsent` runs is never overwritten.
+    func testUpsertIfAbsent_aTakeArrivingOnAnotherConnectionMidWrite_isNotOverwritten() throws {
+        let other = try EncryptedTakeStore(keys: keys, directoryURL: tempDir)
+        let mine = Take(blocks: [.textLine("recovered copy")])
+        var arrived = mine
+        arrived.blocks = [.textLine("arrived through sync")]
+        arrived.modifiedAt = mine.modifiedAt.addingTimeInterval(60)
+
+        let landed = DispatchGroup()
+        var fired = false
+        store.afterTakeReadForTesting = {
+            guard !fired else { return }
+            fired = true
+            let started = DispatchSemaphore(value: 0)
+            landed.enter()
+            DispatchQueue.global().async {
+                started.signal()
+                _ = try? other.applyRemote(arrived)
+                landed.leave()
+            }
+            started.wait()
+            _ = landed.wait(timeout: .now() + 0.5)
+        }
+        _ = try store.upsertIfAbsent(mine)
+        store.afterTakeReadForTesting = nil
+        XCTAssertEqual(landed.wait(timeout: .now() + 10), .success)
+        XCTAssertTrue(fired)
+        XCTAssertEqual(try store.take(id: mine.id)?.blocks, arrived.blocks)
+    }
+
     /// Tombstones are persisted too — a deletion recorded before a relaunch is
     /// still pending propagation after it.
     func testEncryptedStore_tombstones_surviveReopen() throws {
