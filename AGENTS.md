@@ -12,7 +12,7 @@ This code holds people's notes and the only key to them. Each rule below comes f
 - **Write Keychain items update-then-add.** Delete-then-add only on `errSecInteractionNotAllowed`, because a kill between the two leaves no key on disk.
 - **Leave out `kSecUseAuthenticationUISkip`.** It has caused three separate defects here (see `MnemonicKeychain.exists()`).
 - **Take the database folder from the caller:** the App Group container on the iPhone, Application Support on the Mac.
-- **Keep Core as `upToNextMajor` in `Package.swift`.** Each app's exact Core pin then decides which Core it builds against, so a Core 1.x release needs no release here; a Core 2.0 would. The tests run against the newest Core 1.x, so a Core change that breaks this package shows up here too.
+- **Keep Core as `upToNextMajor` in `Package.swift`.** Each app's exact Core pin then decides which Core it builds against, so a Core 2.x release needs no release here; a Core 3.0 would. The tests run against the newest Core 2.x, so a Core change that breaks this package shows up here too.
 
 The Mac app pins an exact version in its `project.yml`, so a change here is live only after that pin moves. The iPhone app still has its own copy of this code (Catchlight-iOS `Catchlight/Database/`, `Catchlight/Security/`, `Catchlight/Sync/FileCloudFolder.swift`).
 
