@@ -4,9 +4,7 @@
 //
 //  Exercises the real iOS Keychain via `MnemonicKeychain` (added in Task 3.12)
 //  so the Settings → Privacy phrase reveal path is provably stable across:
-//  store / overwrite / retrieve / delete. Gated to the iOS app target — under
-//  `swift test` on macOS the Catchlight module isn't available and the suite
-//  is skipped automatically.
+//  store / overwrite / retrieve / delete.
 //
 //  No mocking: this hits the device Keychain under the same access group as
 //  the production app, so a regression in the Keychain query attributes
