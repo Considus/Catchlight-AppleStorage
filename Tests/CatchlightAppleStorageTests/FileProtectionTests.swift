@@ -9,11 +9,6 @@
 //  that the attribute is correctly written — confirming on a real device is on the
 //  pre-release checklist.
 //
-//  The store under test lives in the iOS app target (`EncryptedTakeStore`), so
-//  this test is gated by `#if canImport(Catchlight)` and runs inside the iOS test
-//  bundle. Under `swift test` on macOS, where the iOS app target is not built,
-//  the file compiles to nothing and the Core tests run unchanged.
-//
 
 import XCTest
 import CryptoKit

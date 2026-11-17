@@ -8,11 +8,6 @@
 //    • canonical anchor words ("abandon" first, "zoo" last) are present
 //    • mnemonics generated against it only use words from the bundled list
 //
-//  The loader (`EnglishWordlist.load()`) lives in the iOS app target — it depends
-//  on `Bundle.main` and is unreachable under `swift test`. The file is gated by
-//  `#if canImport(Catchlight)` so the macOS Core test run is unaffected and the
-//  iOS test bundle (XcodeGen `CatchlightTests`) executes it.
-//
 
 import XCTest
 import CryptoKit

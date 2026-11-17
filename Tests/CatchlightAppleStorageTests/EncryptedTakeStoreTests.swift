@@ -19,9 +19,6 @@
 //  suite deleted the production `catchlight.db` path, which could destroy live
 //  user data if run against a non-fresh simulator.
 //
-//  iOS-only: gated on `canImport(Catchlight)`; the `swift test` macOS pass
-//  skips both suites cleanly.
-//
 
 import XCTest
 @testable import CatchlightAppleStorage
